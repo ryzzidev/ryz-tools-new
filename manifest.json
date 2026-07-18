@@ -1,0 +1,17 @@
+{
+  "short_name": "Ryz Tools",
+  "name": "Ryz Tools v1.5",
+  "icons": [
+    {
+      "src": "https://files.catbox.moe/szj0c8.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "display": "standalone",
+  "orientation": "portrait"
+}
