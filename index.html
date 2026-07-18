@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RYZ TOOLS V1.5</title>
+    
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link class="apple-touch-icon" href="https://files.catbox.moe/u2z647.png">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Tambahan Script PWA & Auto Install Prompt dari Kode Kedua -->
+    <script>
+        // 2. Daftarkan Service Worker (sw.js)
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('Service Worker terdaftar!', reg))
+              .catch(err => console.error('Gagal daftar Service Worker:', err));
+          });
+        }
+
+        // 3. Logika memicu prompt instalasi otomatis ketika masuk web
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Mencegah browser menampilkan prompt bawaan secara acak
+          e.preventDefault();
+          deferredPrompt = e;
+          
+          // Langsung munculkan ajakan install ke pengguna
+          deferredPrompt.prompt();
+          
+          // Cek apakah pengguna menerima atau menolak instalasi
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('Pengguna menginstal aplikasi');
+            } else {
+              console.log('Pengguna menolak instalasi');
+            }
+            deferredPrompt = null;
+          });
+        });
+    </script>
+</head>
+<body>
+
+    <audio id="bg-music" src="https://files.catbox.moe/aust7n.mp4" loop preload="auto"></audio>
+
+    <!-- SPLASH SCREEN ANIMASI BULAT BERPUTAR -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img class="image-box" src="https://files.catbox.moe/u2z647.png" alt="Loading">
+            <h1>RYZ TOOLS V1.5</h1>
+            
+            <div class="spinner-container">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            
+            <p id="countdown" class="countdown-text">Mempersiapkan Sistem... (10s)</p>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="hidden">
+        <img src="https://files.catbox.moe/szj0c8.png" class="login-avatar" alt="User Avatar">
+        <h1 class="login-title">WELCOME</h1>
+        <p class="login-subtitle">Sign in to continue</p>
+        <div class="login-card">
+            <div class="login-group">
+                <input type="text" id="username" class="login-input" placeholder="Username" autocomplete="off">
+            </div>
+            <div class="login-group">
+                <input type="password" id="password" class="login-input" placeholder="Password">
+            </div>
+            <button onclick="handleLogin()" class="login-btn">SIGN IN</button>
+        </div>
+        <p class="login-footer">&copy; 2026 RyzziSiber &bull; Ryz Tools</p>
+    </div>
+
+    <!-- MAIN MENU CONTROLLER -->
+    <div id="main-menu" class="hidden">
+        
+        <!-- HOME PAGE (DASHBOARD) -->
+        <div id="page-home" class="menu-page active">
+            <div class="dashboard-banner">
+                <!-- POJOK ATAS: INDIKATOR ONLINE & PENGATUR MUSIK -->
+                <div class="banner-top-actions">
+                    <div class="online-indicator">
+                        <span class="green-dot"></span>
+                        <span class="online-count">23 Live</span>
+                    </div>
+                    <button onclick="toggleMusic()" class="music-btn">
+                        <svg id="music-icon" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 0L21 18.25m-1.5-12.25v12.25M9 9V21m0-12L3 11.25m6 9.75a3 3 0 11-6 0 3 3 0 016 0zm12-2.25a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="dashboard-title">RYZ TOOLS V1.5</div>
+                <div class="dashboard-author">Developer: @RyzziSiber</div>
+            </div>
+
+            <!-- MENU UTAMA -->
+            <div class="menu-grid">
+                <div class="menu-card" onclick="navigateToPage('spam')">
+                    <div class="icon-wrapper">📨</div>
+                    <div class="title">Spam Tele</div>
+                    <div class="desc">Spam Massal Telegram</div>
+                </div>
+                <div class="menu-card" onclick="navigateToPage('bug')">
+                    <div class="icon-wrapper">💀</div>
+                    <div class="title">Bugs</div>
+                    <div class="desc">Bug WA</div>
+                </div>
+                <!-- AKSES AKSELERASI MENU ANIME -->
+                <div class="menu-card" onclick="navigateToPage('anime')">
+                    <div class="icon-wrapper">🎬</div>
+                    <div class="title">Anime</div>
+                    <div class="desc">Nonton & Cari Anime</div>
+                </div>
+            </div>
+
+            <!-- WIDGET JADWAL SHOLAT 5 WAKTU -->
+            <div class="sholat-container">
+                <div class="sholat-header">
+                    <span>🕌 PENGINGAT WAKTU SHOLAT</span>
+                    <span id="live-clock" style="font-family: monospace; color:#ffffff;">00:00:00</span>
+                </div>
+                <div class="sholat-grid">
+                    <div class="sholat-item" id="sholat-subuh">
+                        <span class="sholat-name">Subuh</span>
+                        <span class="sholat-time">04:42</span>
+                    </div>
+                    <div class="sholat-item" id="sholat-dzuhur">
+                        <span class="sholat-name">Dzuhur</span>
+                        <span class="sholat-time">12:05</span>
+                    </div>
+                    <div class="sholat-item" id="sholat-ashar">
+                        <span class="sholat-name">Ashar</span>
+                        <span class="sholat-time">15:28</span>
+                    </div>
+                    <div class="sholat-item" id="sholat-maghrib">
+                        <span class="sholat-name">Maghrib</span>
+                        <span class="sholat-time">18:15</span>
+                    </div>
+                    <div class="sholat-item" id="sholat-isya">
+                        <span class="sholat-name">Isya</span>
+                        <span class="sholat-time">19:28</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPAM TELEGRAM PAGE -->
+        <div id="page-spam" class="menu-page">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <button class="back-btn" onclick="navigateToTab('home')">← Dashboard</button>
+            </div>
+            <div class="video-container">
+                <video class="video-banner" autoplay loop muted playsinline>
+                    <source src="https://files.catbox.moe/p3dhgo.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="text-center relative" style="padding:4px 0;">
+                <h2 class="title-app">SPAM TELEGRAM</h2>
+                <p class="subtitle-app">Kirim spam massal</p>
+            </div>
+            <div class="card-form">
+                <div class="form-group">
+                    <label class="form-label">Token Bot</label>
+                    <input type="text" id="bot-token" placeholder="123456789:ABCdefGhI..." class="form-input font-mono">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ID Target</label>
+                    <input type="text" id="target-id" placeholder="Masukkan ID Telegram" class="form-input font-mono">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pesan</label>
+                    <textarea id="spam-message" rows="2" placeholder="Tulis pesan..." class="form-input" style="resize:none; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah Spam</label>
+                    <div class="grid-counts">
+                        <button type="button" onclick="setCount(20)" class="count-btn">20</button>
+                        <button type="button" onclick="setCount(30)" class="count-btn">30</button>
+                        <button type="button" onclick="setCount(50)" class="count-btn">50</button>
+                        <button type="button" onclick="setCount(70)" class="count-btn">70</button>
+                        <button type="button" onclick="setCount(100)" class="count-btn">100</button>
+                        <button type="button" onclick="setCount(120)" class="count-btn">120</button>
+                    </div>
+                    <input type="hidden" id="spam-count" value="20">
+                </div>
+                <button id="start-btn" onclick="startSpam()" class="submit-btn">MULAI SPAM</button>
+            </div>
+            <div class="form-group">
+                <div class="terminal-header">
+                    <label class="terminal-title"><span class="pulse-dot"></span> TERMINAL LOG</label>
+                    <button onclick="clearTerminal()" class="clear-btn">[ Clear ]</button>
+                </div>
+                <div id="terminal"><span class="log-muted">Sistem siap digunakan...</span></div>
+            </div>
+        </div>
+
+        <!-- BUG VIRRYZ PAGE -->
+        <div id="page-bug" class="menu-page">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <button class="back-btn" onclick="navigateToTab('home')">← Dashboard</button>
+            </div>
+            <div class="video-container">
+                <video class="video-banner" autoplay loop muted playsinline>
+                    <source src="https://files.catbox.moe/p3dhgo.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="text-center relative" style="padding:4px 0;">
+                <h2 class="title-app">BUG VIRRYZ</h2>
+                <p class="subtitle-app">Buug wa ganas</p>
+            </div>
+            <div class="card-form">
+                <div class="form-group">
+                    <label class="form-label">Target Number</label>
+                    <input type="text" id="bug-target" placeholder="Contoh: 62xxxxxx" class="form-input font-mono">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Select Type Bug's</label>
+                    <div class="bug-options">
+                        <button type="button" onclick="setBugMode(1)" class="bug-btn active" id="bug-1">FORCLOSE</button>
+                        <button type="button" onclick="setBugMode(2)" class="bug-btn" id="bug-2">BEKU</button>
+                        <button type="button" onclick="setBugMode(3)" class="bug-btn" id="bug-3">EXTREME</button>
+                    </div>
+                    <input type="hidden" id="bug-mode" value="1">
+                </div>
+                <button onclick="sendBug()" class="send-bug-btn">send attack</button>
+            </div>
+            <div class="form-group">
+                <div class="terminal-header">
+                    <label class="terminal-title"><span class="pulse-dot"></span> PAYLOAD TERMINAL</label>
+                    <button onclick="clearBugTerminal()" class="clear-btn">[ Clear ]</button>
+                </div>
+                <div id="bug-terminal"><span class="log-muted">Siap memproses...</span></div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: INTEGRASI MENU ANIME -->
+        <div id="page-anime" class="menu-page">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <button class="back-btn" onclick="navigateToTab('home')">← Dashboard</button>
+            </div>
+            <div id="menu-5" class="menu-content">
+                <!-- SEARCH BAR ANIME -->
+                <div class="search-anime-box">
+                    <input type="text" placeholder="Cari Anime (Naruto, One Piece...)" id="search-anime-input" />
+                </div>
+
+                <!-- KATEGORI CEPAT -->
+                <section class="anime-section">
+                    <div class="lux-section-title">KATEGORI CEPAT</div>
+                    <div class="chips-container">
+                        <div class="anime-chip">Anime</div>
+                        <div class="anime-chip">Hentai</div>
+                        <div class="anime-chip">Isekai</div>
+                        <div class="anime-chip">Donghua</div>
+                    </div>
+                </section>
+
+                <!-- LIST ANIME POPULER -->
+                <section class="anime-section">
+                    <div class="lux-section-title">SEDANG POPULER</div>
+                    <div class="anime-grid">
+
+                        <!-- CARD 1 -->
+                        <a href="https://subnime.id/anime/tensei-shitara-slime-datta-ken-4th-season" class="anime-card">
+                            <div class="poster">
+                                <img src="https://files.catbox.moe/ytkm56.png" alt="Tensei Shitara Slime Datta Ken 4th Season">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Tensei Shitara Slime Datta Ken 4th Season</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+
+                        <!-- CARD 2 -->
+                        <a href="https://subnime.id/anime/one-piece" class="anime-card">
+                            <div class="poster">
+                                <img src="https://files.catbox.moe/yphn2x.png" alt="One Piece">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>One Piece</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 3 -->
+                        <a href="https://subnime.id/anime/toujima-tanzaburou-wa-kamen-rider-ni-naritai" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1455/152139l.jpg" alt="Kamen Rider">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Toujima Tanzaburou wa Kamen Rider ni Naritai</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+
+                        <!-- CARD 4 -->
+                        <a href="https://subnime.id/anime/nageki-no-bourei-wa-intai-shitai-part-2" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1651/152063.jpg" alt="Nogeki">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Nageki no Bourei wa Intai shitai</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 5 -->
+                        <a href="https://subnime.id/anime/jujutsu-kaisen-shimetsu-kaiyuu" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1889/147024l.jpg" alt="Jujutsu Kaisen">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Jujutsu Kaisen: Shimetsu Kaiyuu</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+
+                        <!-- CARD 6 -->
+                        <a href="https://subnime.id/anime/youjo-senki-ii" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1437/115925l.jpg" alt="Senki">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Youjo Senki II</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 7 -->
+                        <a href="https://subnime.id/anime/hell-mode-yarikomizuki-no-gamer-wa-hai-settei-no-isekai-de-musou-suru" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1151/152479.jpg" alt="Hell mode">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Hell mode</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+
+                        <!-- CARD 8 -->
+                        <a href="https://subnime.id/anime/saikyou-no-ousama-nidome-no-jinsei-wa-nani-wo-suru-season-2" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1738/156028.jpg" alt="Saikyou no ousama">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>saikyou no ousama</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 9 -->
+                        <a href="https://subnime.id/anime/dr-stone-science-future-part-3" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1773/155779.jpg" alt="Dr. Stone: Science Future Part 3">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Dr. Stone: Science Future Part 3</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+
+                        <!-- CARD 10 -->
+                        <a href="https://subnime.id/anime/enen-no-shouboutai" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1664/103275l.jpg" alt="Enen no Shouboutai">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Enen no Shouboutai</h4>
+                                <div class="meta">1 EP • TV</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 11 -->
+                        <a href="https://subnime.id/anime/naruto-shippuuden" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1565/111305l.jpg" alt="Naruto">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Naruto Shippuden</h4>
+                                <div class="meta">Remaja</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 12 -->
+                        <a href="https://subnime.id/anime/one-punch-man" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/12/76049l.jpg" alt="Botak">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>One Punch Man</h4>
+                                <div class="meta">Saitama</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 13 -->
+                        <a href="https://subnime.id/anime/shingeki-no-kyojin-the-final-season-kanketsu-hen" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1279/131078l.jpg" alt="Eren Yeager">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Shingeki no Kyojin: The Final Season</h4>
+                                <div class="meta">Perpisahan</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 14 -->
+                        <a href="https://subnime.id/anime/tsue-to-tsurugi-no-wistoria-season-2" class="anime-card">
+                            <div class="poster">
+                                <img src="https://myanimelist.net/images/anime/1190/155788.jpg" alt="Tsue to Tsurugi no Wistoria Season 2">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Tsue to Tsurugi no Wistoria Season 2</h4>
+                                <div class="meta">Terbaru</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 15 -->
+                        <a href="https://subnime.id/anime/yomi-no-tsugai" class="anime-card">
+                            <div class="poster">
+                                <img src="https://myanimelist.net/images/anime/1171/156397.jpg" alt="Yomi no Tsugai">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Yomi no Tsugai</h4>
+                                <div class="meta">Terbaru</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 16 -->
+                        <a href="https://subnime.id/anime/viral-hit" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1594/142521.jpg" alt="Viral Hit">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Viral Hit</h4>
+                                <div class="meta">Terbaru</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 17 -->
+                        <a href="https://subnime.id/anime/yozakura-san-chi-no-daisakusen-2nd-season" class="anime-card">
+                            <div class="poster">
+                                <img src="https://myanimelist.net/images/anime/1230/155783.jpg" alt="Yozakura-san Chi no Daisakusen">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Yozakura-san Chi no Daisakusen 2nd Season</h4>
+                                <div class="meta">Terbaru</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 18 -->
+                        <a href="https://subnime.id/anime/dandadan-season-2" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1721/149001l.jpg" alt="Dandadan">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Dandadan Season 2</h4>
+                                <div class="meta">Season 2</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 19 -->
+                        <a href="https://subnime.id/anime/snowball-earth" class="anime-card">
+                            <div class="poster">
+                                <img src="https://myanimelist.net/images/anime/1786/156390.jpg" alt="Snowball Earth">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Snowball Earth</h4>
+                                <div class="meta">Terbaru</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 20 -->
+                        <a href="https://subnime.id/anime/jigoku-sensei-nube-2025" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1637/148197l.jpg" alt="Jigoku Sensei Nube">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Jigoku Sensei Nube</h4>
+                                <div class="meta">Populer</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 21 -->
+                        <a href="https://subnime.id/anime/spy-x-family-s3" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1697/151793l.jpg" alt="Spy x Family Season 3">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Spy x Family Season 3</h4>
+                                <div class="meta">Populer</div>
+                            </div>
+                        </a>
+                        
+                        <!-- CARD 22 -->
+                        <a href="https://subnime.com/anime/ore-wa-seikan-kokka-no-akutoku-ryoushu" class="anime-card">
+                            <div class="poster">
+                                <img src="https://cdn.myanimelist.net/images/anime/1703/148600l.jpg" alt="Dalam hidup Terakhir">
+                                <div class="episode">2025</div>
+                            </div>
+                            <div class="info">
+                                <h4>Ore wa Seikan Kokka!</h4>
+                                <div class="meta">Isekai</div>
+                            </div>
+                        </a>
+
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- STATS / HISTORY PAGE -->
+        <div id="page-stats" class="menu-page">
+            <div class="history-header">
+                <h2 class="history-title">Riwayat Aktivitas</h2>
+                <button class="delete-hist-btn" onclick="clearHistory()">🗑</button>
+            </div>
+            <div id="history-container">
+                <div class="empty-history">Belum ada riwayat aktivitas.</div>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE (DENGAN DEVICE & IP INFO) -->
+        <div id="page-profile" class="menu-page">
+            <div class="profile-card-box">
+                <div style="font-size: 48px; margin-bottom: 12px;">👤</div>
+                <div class="profile-role-badge" id="profile-role">USER MEMBER</div>
+                <div class="profile-username" id="profile-name">Membervip</div>
+                
+                <!-- Detail Perangkat & IP Publik -->
+                <div class="device-info-wrapper">
+                    <div class="info-row">
+                        <span class="info-label">📍 IP Address:</span>
+                        <span class="info-value font-mono" id="user-ip">Loading IP...</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📱 Device / OS:</span>
+                        <span class="info-value" id="user-device">Mendeteksi...</span>
+                    </div>
+                </div>
+
+                <button onclick="handleLogout()" class="logout-btn">LOGOUT</button>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <div class="bottom-nav">
+            <!-- Menu Home -->
+            <div class="nav-item active" id="nav-home" onclick="navigateToTab('home')">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </span>
+                <span>Home</span>
+            </div>
+            
+            <!-- Menu WhatsApp / Tools Redirect -->
+            <div class="nav-item" id="nav-tools" onclick="navigateToPage('spam')">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.3C.5 6.7.9 9.8 2.9 11.8c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.5z"/></svg>
+                </span>
+                <span>Tools</span>
+            </div>
+
+            <!-- Menu Anime (Ditambahkan pada navigasi bawah) -->
+            <div class="nav-item" id="nav-anime" onclick="navigateToPage('anime')">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H9l2 4H8L6 4H5c-1.1 0-1.99.9-1.99 2L3 18c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4h-3z"/></svg>
+                </span>
+                <span>Anime</span>
+            </div>
+
+            <!-- Menu Stats -->
+            <div class="nav-item" id="nav-stats" onclick="navigateToTab('stats')">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.347a9.936 9.936 0 004.877 1.28c5.508 0 9.99-4.479 9.992-9.986 0-2.67-1.037-5.178-2.924-7.066A9.923 9.923 0 0012.012 2zm5.727 14.046c-.245.69-1.22 1.26-1.72 1.309-.457.045-.923.07-1.57-.184a7.514 7.514 0 01-3.303-2.074 8.28 8.28 0 01-2.28-3.176c-.462-.788-.426-1.467-.09-1.808.3-.305.666-.757.994-1.137.1-.114.192-.224.272-.323.23-.292.378-.49.54-.816.08-.164.04-.307-.02-.43-.06-.123-.54-1.301-.74-1.782-.194-.469-.393-.406-.54-.413l-.46-.01c-.324 0-.85.122-1.295.61-.444.487-1.697 1.657-1.697 4.04 0 2.384 1.737 4.69 1.98 5.016.243.326 3.42 5.223 8.286 7.322 1.157.5 2.062.798 2.768 1.022 1.164.37 2.224.318 3.062.193.934-.14 1.88-.77 2.144-1.477.264-.707.264-1.314.185-1.442-.078-.127-.29-.204-.614-.367z"/></svg>
+                </span>
+                <span>Stats</span>
+            </div>
+
+            <!-- Menu Profile -->
+            <div class="nav-item" id="nav-profile" onclick="navigateToTab('profile')">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </span>
+                <span>Profile</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
